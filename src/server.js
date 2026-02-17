@@ -1,6 +1,7 @@
 import app from "./app.js";
 import sequelize from "./config/db.js";
-import "./models/Hero.js"; // 👈 model MUST be imported
+import "./models/Hero.js"; 
+import authRoutes from "./routes/auth.routes.js";
 
 const PORT = process.env.PORT || 3000;
 

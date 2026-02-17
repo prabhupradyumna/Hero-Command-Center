@@ -1,13 +1,14 @@
 import express from "express";
-import { recruitHero, getHeroes, getHeroById, updateHero, deleteHero } from "../controllers/hero.controller.js";
+import { recruitHero, getAllHeroes, deleteHero } from "../controllers/hero.controller.js";
+import { protect } from "../middleware/auth.middleware.js";
+import { authorize } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 
-router.post("/recruit", recruitHero);
-router.get("/", getHeroes);
-router.get("/:id", getHeroById);
-router.put("/:id", updateHero);
-router.delete("/:id", deleteHero);
+router.post("/", protect, recruitHero);
+router.get("/", protect, getAllHeroes);
 
+// Example admin-only delete
+router.delete("/:id", protect, authorize("admin"), deleteHero);
 
 export default router;

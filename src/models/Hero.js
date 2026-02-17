@@ -1,43 +1,44 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import User from "./user.model.js";
 
 const Hero = sequelize.define(
   "Hero",
   {
     id: {
       type: DataTypes.INTEGER,
+      primaryKey: true,
       autoIncrement: true,
-      primaryKey: true
     },
-    codename: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    email: {
+
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
     },
-    role: {
-      type: DataTypes.STRING
+
+    power: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    clearanceLevel: {
+
+    city: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    userId: {
       type: DataTypes.INTEGER,
-      defaultValue: 1
+      allowNull: false,
     },
-    squad: {
-      type: DataTypes.STRING
-    },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
-    }
   },
   {
-    tableName: "heroes",
+    paranoid: true,
     timestamps: true,
-    paranoid: true
   }
 );
+
+// 🔥 Association
+Hero.belongsTo(User, { foreignKey: "userId" });
+User.hasMany(Hero, { foreignKey: "userId" });
 
 export default Hero;
