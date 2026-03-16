@@ -1,7 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import User from "./user.model.js";
-
 const Hero = sequelize.define(
   "Hero",
   {
@@ -26,19 +25,39 @@ const Hero = sequelize.define(
       allowNull: false,
     },
 
+    squad: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    clearanceLevel: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+    },
+
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    avatar: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    }, 
   },
+ 
   {
     paranoid: true,
     timestamps: true,
-  }
+  },
 );
 
-// 🔥 Association
 Hero.belongsTo(User, { foreignKey: "userId" });
 User.hasMany(Hero, { foreignKey: "userId" });
 
 export default Hero;
+

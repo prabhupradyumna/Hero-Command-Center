@@ -1,17 +1,19 @@
 import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
+import env from "./env.js";
 
-dotenv.config();
+const sequelize = new Sequelize(env.dbName, env.dbUser, env.dbPassword, {
+  host: env.dbHost,
+  port: env.dbPort,
+  dialect: "postgres",
+  logging: env.nodeEnv === "development" ? false : false,
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
-    dialect: "postgres", // 👈 hardcode this for now
-    logging: false
-  }
-);
+  // Connection pooling — reuses DB connections instead of creating new ones
+  pool: {
+    max: 10,       // maximum number of connections in pool
+    min: 2,        // minimum number of connections kept alive
+    acquire: 30000, // max ms to wait before throwing error when getting connection
+    idle: 10000,   // ms a connection can be idle before being released
+  },
+});
 
 export default sequelize;

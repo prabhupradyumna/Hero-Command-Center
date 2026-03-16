@@ -1,25 +1,73 @@
+import http from "http";
+import https from "https";
+import fs from "fs";
+import path from "path";
+
 import app from "./app.js";
 import sequelize from "./config/db.js";
-import "./models/Hero.js"; 
-import authRoutes from "./routes/auth.routes.js";
+import env from "./config/env.js";
+import "./models/index.js";
+import { accessLogger } from "./utils/logger.js";
 
-const PORT = process.env.PORT || 3000;
+// ── HTTPS (if certs exist) or HTTP fallback ───────────────────────────────────
+const certPath = path.join("certs", "server.cert");
+const keyPath = path.join("certs", "server.key");
 
+const useHttps = fs.existsSync(certPath) && fs.existsSync(keyPath);
+
+const server = useHttps
+  ? https.createServer(
+      {
+        cert: fs.readFileSync(certPath),
+        key: fs.readFileSync(keyPath),
+      },
+      app
+    )
+  : http.createServer(app);
+
+// ── Graceful Shutdown ─────────────────────────────────────────────────────────
+const shutdown = async (signal) => {
+  accessLogger.info(`${signal} received. Shutting down gracefully...`);
+
+  server.close(async () => {
+    try {
+      await sequelize.close();
+      accessLogger.info("Database connection closed.");
+      accessLogger.info("Server shut down.");
+      process.exit(0);
+    } catch (error) {
+      accessLogger.error("Error during shutdown", { error: error.message });
+      process.exit(1);
+    }
+  });
+
+  // Force exit if shutdown takes too long
+  setTimeout(() => {
+    accessLogger.error("Forced shutdown after timeout.");
+    process.exit(1);
+  }, 10000);
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+// ── Startup ───────────────────────────────────────────────────────────────────
 (async () => {
   try {
-    // 1️⃣ Check DB connection
     await sequelize.authenticate();
-    console.log("PostgreSQL connected successfully ✅");
+    accessLogger.info("PostgreSQL connected successfully");
 
-    // 2️⃣ Sync models → creates/updates tables
     await sequelize.sync({ alter: true });
-    console.log("Database synced successfully 🗄️");
+    accessLogger.info("Database synced successfully");
 
-    // 3️⃣ Start server
-    app.listen(PORT, () => {
-      console.log(`Hero Command Center backend is running on port ${PORT}`);
+    server.listen(env.port, () => {
+      const protocol = useHttps ? "https" : "http";
+      accessLogger.info(
+        `Hero Command Center running on ${protocol}://localhost:${env.port} [${env.nodeEnv}]`
+      );
     });
   } catch (error) {
-    console.error("Startup failed ❌", error);
+    accessLogger.error("Startup failed", { error: error.message });
+    process.exit(1);
   }
 })();
