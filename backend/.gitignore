@@ -1,0 +1,10 @@
+node_modules/
+.env
+tmpclaude-*
+nul
+logs/*.log
+certs/*.cert
+certs/*.key
+.next/
+dist/
+build/
